@@ -43,8 +43,34 @@ public class FileOperate {
 		//Todo文件夹名，未改
 	}
 	
-	
-	
+	/**
+	 * 复制单个文件
+	 * @param src
+	 * @param des
+	 */
+	public static void copySingleFile(File src ,File des){
+		BufferedReader br = null;
+		BufferedWriter bw = null;
+		try {
+			br = new BufferedReader(new FileReader(src));
+			bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(des),"utf-8"));
+			String line;
+			while(null != (line = br.readLine())){
+				bw.write(line);
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+				try {
+					if(br != null) br.close();
+					if(bw != null) bw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		}
+	}
 	
 	
 
