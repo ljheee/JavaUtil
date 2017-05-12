@@ -55,8 +55,7 @@ public class TimeUtil {
 	
 	public static void main(String[] args) {
 //		timeInterval("2017-5-3 21:58:23");
-		System.out.println(getTimeInterval("2017-5-3 21:58:23"));
-		
+		System.out.println(getTimeInterval("2017-5-6 22:20:23"));
 	}
 
 }
