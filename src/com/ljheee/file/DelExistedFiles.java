@@ -8,15 +8,17 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-/**
- * http://blog.csdn.net/j2eelamp/article/details/6408366
- *
- */
-public class DelExistFiles3 {
-	// 定义一个数组，用来存放不重复的文件的MD5值
+public class DelExistedFiles {
+
+	// 定义一个List，用来存放不重复的文件的MD5值
 	private List<String> md5List = new ArrayList<String>();
+	
+	//<md5 , filepath>存储文件名包含“副本”的文件路径，有重复时优先删除
+	private HashMap<String, String> map = new HashMap<>();
+	
 	static int num = 0;
 
 	/**
@@ -29,53 +31,60 @@ public class DelExistFiles3 {
 		File f = new File(path);
 		// 如果给的是一个文件，则继续
 		if (f.isFile()) {
-			// 取得该文件的MD5值
-			String md5 = getMd5(f).toString();
-			// 如果存放md5值的数组不为空
-			if (md5List.size() > 0) {
-				for (String s : md5List) {
-					// 如果数组中有了和该文件md5z值相同的项，表明该文件已经存在,删除该文件
-					if (md5.equals(s)) {
-						f.delete();
-						num++;
-						System.out.println("文\t" + f.getName() + "\t和已有文件重复，已被删除");
-					}
-				}
-				// 判断该文件是否存在，如果该文件没有被删除，表明没有和该文件相同的文件，则把其md5值存入数组之中
-				if (f.exists()) {
-					md5List.add(md5);
-				}
-			} else {
-				// 数组为空，表示还没有相同的项,将把其md5值存入数组之中
-				md5List.add(md5);
-			}
+			doDelFile(f);
+			
 		} else if (f.isDirectory()) {
 			// 拿到它的子文件列表
 			File[] flist = f.listFiles();
 			for (File file : flist) {
-				// 如果列表项为File，则继续，同上
-				if (file.isFile()) {
-					String md5 = getMd5(file).toString();
-					if (md5List.size() > 0) {
-						for (String s : md5List) {
-							if (md5.equals(s)) {
-								file.delete();
-								num++;
-								System.out.println("文件\t" + file.getName() + "\t和已有文件重复，已被删除");
-							}
-						}
-						if (file.exists()) {
-							md5List.add(md5);
-						}
-					} else {
-						md5List.add(md5);
-					}
-					// 如果列表项为文件夹，递归调用自身
-				} else if (file.isDirectory()) {
+				if (file.isFile()) {// 如果列表项为File，则继续，同上
+					doDelFile(file);
+				} else if (file.isDirectory()) {// 如果列表项为文件夹，递归调用自身
 					delFile(file.getPath());
 				}
 			}
 		}
+	}
+
+	/**
+	 * 删除单个文件
+	 * @param f
+	 */
+	public void doDelFile(File f) {
+		
+		// 取得该文件的MD5值
+		String md5 = getMd5(f).toString();
+		
+		if (f.getName().contains("副本")) {
+			map.put(md5, f.getAbsolutePath());
+		}
+
+		// 如果存放md5值的数组不为空
+		if (md5List.size() > 0) {
+			if (md5List.contains(md5)) {
+				
+				if (f.getName().contains("副本")) {
+					f.delete();
+					num++;
+					System.out.println("文\t" + f.getName() + "\t和已有文件重复，已被删除");
+				}else{
+					File tp = new File(map.get(md5));//删除文件名包含“副本”的
+					tp.delete();
+					num++;
+					System.out.println("文\t" + tp.getName() + "\t和已有文件重复，已被删除");
+				}
+				
+			}
+
+			// 判断该文件是否存在，如果该文件没有被删除，表明没有和该文件相同的文件，则把其md5值存入数组之中
+			if (f.exists()) {
+				md5List.add(md5);
+			}
+		} else {
+			// 数组为空，表示还没有相同的项,将把其md5值存入数组之中
+			md5List.add(md5);
+		}
+
 	}
 
 	/**
@@ -115,8 +124,9 @@ public class DelExistFiles3 {
 	}
 
 	public static void main(String[] args) {
-		DelExistFiles3 df = new DelExistFiles3();
+		DelExistedFiles df = new DelExistedFiles();
 		df.delFile("E:\\oppo2");
 		System.out.println("操作结束，共删除了\t" + num + "\t个重复文件");
 	}
+
 }
